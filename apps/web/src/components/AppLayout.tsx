@@ -1,30 +1,31 @@
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 const navItems = [
   { to: "/", label: "Dashboard" },
-  { to: "/generate", label: "Generate Problem" },
-  { to: "/solve", label: "Solve Problem" },
-  { to: "/history", label: "Submission History" },
-  { to: "/topics", label: "Topic Explorer" }
+  { to: "/generate", label: "Generate" },
+  { to: "/solve", label: "Solve" },
+  { to: "/history", label: "History" },
+  { to: "/topics", label: "Topics" }
 ];
 
 export function AppLayout() {
+  const location = useLocation();
+  const isWorkspace = location.pathname === "/solve";
+
   return (
-    <div className="min-h-screen px-4 py-5 md:px-8">
-      <header className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <Link to="/" className="text-xl font-bold tracking-wide text-slate-100">
-          DSA Lab AI
-        </Link>
-        <nav className="panel flex flex-wrap items-center gap-2 p-2">
+    <div className="app-shell">
+      <header className="topbar">
+        <NavLink to="/" className="topbar-brand">
+          <h1>DSA Lab</h1>
+        </NavLink>
+
+        <nav className="topbar-nav">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
-              className={({ isActive }) =>
-                `rounded-lg px-3 py-2 text-sm transition ${
-                  isActive ? "bg-emerald-500/20 text-emerald-300" : "text-slate-300 hover:bg-slate-800"
-                }`
-              }
+              className={({ isActive }) => (isActive ? "active" : "")}
+              style={{ position: "relative" }}
             >
               {item.label}
             </NavLink>
@@ -32,7 +33,7 @@ export function AppLayout() {
         </nav>
       </header>
 
-      <main>
+      <main className={isWorkspace ? "" : "page-container"}>
         <Outlet />
       </main>
     </div>
