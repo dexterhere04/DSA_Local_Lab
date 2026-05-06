@@ -1,45 +1,89 @@
 import { useEffect, useState } from "react";
 import { api } from "../services/api";
 
+interface SubmissionRow {
+  id: number;
+  title: string;
+  mode: string;
+  status: string;
+  passedCount: number;
+  totalCount: number;
+  runtimeMs: number;
+  memoryKb: number;
+}
+
 export function SubmissionHistoryPage() {
-  const [rows, setRows] = useState<Array<Record<string, unknown>>>([]);
+  const [rows, setRows] = useState<SubmissionRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.listSubmissions().then(setRows);
+    api
+      .listSubmissions()
+      .then((data) => setRows(data as unknown as SubmissionRow[]))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <section className="panel p-5">
-      <h1 className="mb-4 text-2xl font-semibold">Submission History</h1>
-      <div className="overflow-auto">
-        <table className="w-full min-w-[680px] text-left text-sm">
-          <thead>
-            <tr className="text-slate-400">
-              <th className="pb-2">Problem</th>
-              <th className="pb-2">Mode</th>
-              <th className="pb-2">Status</th>
-              <th className="pb-2">Pass</th>
-              <th className="pb-2">Runtime</th>
-              <th className="pb-2">Memory</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={String(row.id)} className="border-t border-slate-800 text-slate-200">
-                <td className="py-2">{String(row.title ?? "-")}</td>
-                <td className="py-2">{String(row.mode ?? "-")}</td>
-                <td className="py-2">{String(row.status ?? "-")}</td>
-                <td className="py-2">
-                  {String(row.passedCount ?? 0)}/{String(row.totalCount ?? 0)}
-                </td>
-                <td className="py-2">{String(row.runtimeMs ?? 0)} ms</td>
-                <td className="py-2">{String(row.memoryKb ?? 0)} KB</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="animate-in">
+      <div className="mb-8">
+        <h2 className="font-serif text-2xl tracking-[-0.02em] text-[var(--text)] mb-2">Submission History</h2>
+        <p className="text-sm text-[var(--text-secondary)] max-w-md leading-relaxed">
+          Track your past attempts and performance metrics.
+        </p>
       </div>
-      {rows.length === 0 ? <p className="mt-3 text-sm text-slate-400">No submissions yet.</p> : null}
-    </section>
+
+      {loading ? (
+        <div className="card">
+          <div className="flex items-center gap-3 text-sm text-[var(--text-tertiary)]">
+            <div className="spinner" />
+            Loading...
+          </div>
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="card empty-state">
+          <p>No submissions yet.</p>
+        </div>
+      ) : (
+        <div className="card !p-0">
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Problem</th>
+                  <th>Mode</th>
+                  <th>Status</th>
+                  <th>Tests</th>
+                  <th>Runtime</th>
+                  <th>Memory</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id}>
+                    <td className="text-[var(--text)] font-medium">{row.title || "-"}</td>
+                    <td>
+                      <span className={`badge ${row.mode === "submit" ? "badge-medium" : "badge-tag"}`}>
+                        {row.mode}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${row.status === "accepted" ? "badge-accepted" : "badge-failed"}`}>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="text-[var(--text)]">{row.passedCount}</span>
+                      <span className="text-[var(--text-tertiary)]"> / {row.totalCount}</span>
+                    </td>
+                    <td className="font-mono text-xs">{row.runtimeMs ?? 0}ms</td>
+                    <td className="font-mono text-xs">{row.memoryKb ?? 0}KB</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
