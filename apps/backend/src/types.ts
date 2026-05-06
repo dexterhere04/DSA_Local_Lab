@@ -31,6 +31,17 @@ export interface GeneratedProblem {
   solutionOutline: string;
 }
 
+export interface ValidationIssue {
+  field: string;
+  problem: string;
+  minimal_fix: string;
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  issues: ValidationIssue[];
+}
+
 export interface JudgeCaseResult {
   input: string;
   expectedOutput: string;
