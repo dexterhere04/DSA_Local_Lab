@@ -6,58 +6,111 @@ import { api } from "../services/api";
 export function DashboardPage() {
   const [problems, setProblems] = useState<ProblemListItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api
       .listProblems()
-      .then(setProblems)
-      .catch((err: Error) => setError(err.message));
+      .then((data) => {
+        setProblems(data);
+        setError(null);
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="grid gap-4 md:grid-cols-[1.8fr_1fr]">
-      <section className="panel p-5">
-        <h1 className="text-2xl font-semibold">Local DSA Playground</h1>
-        <p className="mt-2 max-w-2xl text-sm text-slate-300">
-          Generate AI-driven DSA questions from topics or custom prompts, solve in Java, and validate with hidden/public tests.
+    <div className="animate-in">
+      <div className="mb-8">
+        <h2 className="font-serif text-2xl tracking-[-0.02em] text-[var(--text)] mb-2">Dashboard</h2>
+        <p className="text-sm text-[var(--text-secondary)] max-w-md leading-relaxed">
+          Generate AI-powered DSA problems, solve them in Java, and track your progress.
         </p>
-        <div className="mt-4 flex gap-3">
-          <Link to="/generate" className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-emerald-950">
-            Generate Problem
-          </Link>
-          <Link to="/solve" className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200">
-            Solve Problems
-          </Link>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3 mb-8">
+        <div className="card animate-in" style={{ animationDelay: "0ms" }}>
+          <div className="stat">
+            <div className="stat-value">{problems.length}</div>
+            <div className="stat-label">Problems</div>
+          </div>
         </div>
-      </section>
 
-      <section className="panel p-5">
-        <h2 className="text-lg font-semibold">MVP Focus</h2>
-        <ul className="mt-3 space-y-2 text-sm text-slate-300">
-          <li>• Java-first execution via Judge0</li>
-          <li>• AI problem and hint generation</li>
-          <li>• Hidden/public test support</li>
-          <li>• Local SQLite progress tracking</li>
-        </ul>
-      </section>
+        <Link to="/generate" className="card animate-in group" style={{ animationDelay: "60ms" }}>
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[var(--accent-dim)] text-[var(--accent)] transition-colors group-hover:bg-[var(--accent)] group-hover:text-[#0a0a0a]">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-[var(--text)]">Generate</div>
+              <div className="text-xs text-[var(--text-tertiary)]">Create a new problem</div>
+            </div>
+          </div>
+        </Link>
 
-      <section className="panel p-5 md:col-span-2">
-        <h2 className="mb-3 text-lg font-semibold">Recent Problems</h2>
-        {error ? <p className="text-sm text-red-300">{error}</p> : null}
-        <div className="space-y-2">
-          {problems.map((problem) => (
+        <Link to="/solve" className="card animate-in group" style={{ animationDelay: "120ms" }}>
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-secondary)] transition-colors group-hover:border-[var(--accent-border)] group-hover:text-[var(--accent)]">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-[var(--text)]">Solve</div>
+              <div className="text-xs text-[var(--text-tertiary)]">Open the editor</div>
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-tertiary)]">
+          Recent Problems
+        </h3>
+        {problems.length > 0 && (
+          <Link to="/solve" className="btn btn-ghost btn-sm">
+            View all
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </Link>
+        )}
+      </div>
+
+      {error && <p className="mb-4 text-sm text-[var(--error)]">{error}</p>}
+
+      {loading ? (
+        <div className="card">
+          <div className="flex items-center gap-3 text-sm text-[var(--text-tertiary)]">
+            <div className="spinner" />
+            Loading...
+          </div>
+        </div>
+      ) : problems.length === 0 ? (
+        <div className="card empty-state">
+          <p>No problems yet. Generate one to get started.</p>
+        </div>
+      ) : (
+        <div className="card !p-0">
+          {problems.slice(0, 10).map((problem) => (
             <Link
               key={problem.id}
               to={`/solve?problemId=${problem.id}`}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm hover:border-emerald-500/50"
+              className="problem-item"
             >
-              <span>{problem.title}</span>
-              <span className="text-slate-400">{problem.difficulty}</span>
+              <span className="problem-item-title">{problem.title}</span>
+              <div className="problem-item-meta">
+                <span className={`badge badge-${problem.difficulty}`}>{problem.difficulty}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--text-tertiary)]">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </div>
             </Link>
           ))}
-          {problems.length === 0 ? <p className="text-sm text-slate-400">No problems yet. Generate one to begin.</p> : null}
         </div>
-      </section>
+      )}
     </div>
   );
 }
