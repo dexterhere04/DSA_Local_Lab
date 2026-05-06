@@ -41,3 +41,38 @@ export interface SubmissionResponse {
     hidden: boolean;
   }>;
 }
+
+export type GenerationStepName =
+  | "generating"
+  | "schema_validating"
+  | "llm_validating"
+  | "patching"
+  | "final_validating"
+  | "storing";
+
+export interface GenerationProgressEvent {
+  type: "progress";
+  data: {
+    step: GenerationStepName;
+    issues?: string[];
+    callCount: number;
+  };
+}
+
+export interface GenerationCompleteEvent {
+  type: "complete";
+  data: ProblemDetail;
+}
+
+export interface GenerationErrorEvent {
+  type: "error";
+  data: { message: string };
+}
+
+export type GenerationSseEvent = GenerationProgressEvent | GenerationCompleteEvent | GenerationErrorEvent;
+
+export interface ValidationIssue {
+  field: string;
+  problem: string;
+  minimal_fix: string;
+}
