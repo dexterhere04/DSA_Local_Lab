@@ -10,6 +10,7 @@ export function GenerateProblemPage() {
   const navigate = useNavigate();
 
   const onGenerate = async () => {
+    if (!input.trim() || input.trim().length < 2) return;
     setLoading(true);
     setError(null);
     try {
@@ -23,43 +24,74 @@ export function GenerateProblemPage() {
   };
 
   return (
-    <section className="panel mx-auto max-w-3xl p-5">
-      <h1 className="text-2xl font-semibold">Generate Problem</h1>
-      <p className="mt-2 text-sm text-slate-300">
-        Enter a DSA concept (for example, Longest Increasing Subsequence) or toggle custom mode to provide a free-form problem idea.
-      </p>
-
-      <div className="mt-5 space-y-4">
-        <label className="block text-sm">
-          <span className="mb-1 block text-slate-300">Concept or prompt</span>
-          <textarea
-            className="w-full rounded-lg border border-slate-700 bg-slate-900/80 p-3 text-slate-100 outline-none focus:border-emerald-500"
-            rows={6}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
-        </label>
-
-        <label className="inline-flex items-center gap-2 text-sm text-slate-300">
-          <input
-            type="checkbox"
-            className="accent-emerald-500"
-            checked={isCustomProblem}
-            onChange={(e) => setIsCustomProblem(e.target.checked)}
-          />
-          Treat input as custom problem statement
-        </label>
-
-        <button
-          onClick={onGenerate}
-          disabled={loading || input.trim().length < 2}
-          className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-emerald-950 disabled:opacity-60"
-        >
-          {loading ? "Generating..." : "Generate and Save"}
-        </button>
-
-        {error ? <p className="text-sm text-red-300">{error}</p> : null}
+    <div className="animate-in">
+      <div className="mb-8">
+        <h2 className="font-serif text-2xl tracking-[-0.02em] text-[var(--text)] mb-2">Generate Problem</h2>
+        <p className="text-sm text-[var(--text-secondary)] max-w-md leading-relaxed">
+          Enter a DSA concept or describe a custom problem. AI will create the full specification with tests.
+        </p>
       </div>
-    </section>
+
+      <div className="max-w-2xl">
+        <div className="card">
+          <div className="space-y-5">
+            <div>
+              <label className="section-label mb-3 block">Concept or prompt</label>
+              <textarea
+                className="textarea"
+                rows={8}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="e.g., Longest Increasing Subsequence, or describe your own problem..."
+              />
+            </div>
+
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={isCustomProblem}
+                onChange={(e) => setIsCustomProblem(e.target.checked)}
+              />
+              Treat as custom problem statement
+            </label>
+
+            {error && <p className="text-sm text-[var(--error)]">{error}</p>}
+
+            <button
+              onClick={onGenerate}
+              disabled={loading || !input.trim() || input.trim().length < 2}
+              className="btn btn-primary"
+            >
+              {loading ? (
+                <>
+                  <div className="spinner" />
+                  Generating...
+                </>
+              ) : (
+                "Generate and Open"
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="card mt-4">
+          <h3 className="section-label mb-3">Tips</h3>
+          <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
+            <li className="flex gap-3">
+              <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-[var(--accent)] opacity-50" />
+              Be specific with algorithm concepts for better results
+            </li>
+            <li className="flex gap-3">
+              <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-[var(--accent)] opacity-50" />
+              Custom mode lets you write the full problem statement yourself
+            </li>
+            <li className="flex gap-3">
+              <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-[var(--accent)] opacity-50" />
+              Generated problems include examples, constraints, and test cases
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
   );
 }
