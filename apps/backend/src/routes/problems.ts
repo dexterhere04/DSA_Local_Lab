@@ -86,10 +86,17 @@ export async function problemRoutes(app: FastifyInstance) {
       return reply.status(400).send({ message: parsed.error.message });
     }
 
-    const generated = await problemGenerationService.generateFromInput(
+    const generator = problemGenerationService.generateFromInput(
       parsed.data.input,
       parsed.data.isCustomProblem
     );
+
+    let result: Awaited<ReturnType<typeof generator.next>>;
+    while (!(result = await generator.next()).done) {
+      // Consume progress (not sent in non-streaming mode)
+    }
+
+    const generated = result.value;
 
     const saved = await problemService.createProblem(
       parsed.data.input,
@@ -98,6 +105,58 @@ export async function problemRoutes(app: FastifyInstance) {
     );
 
     return saved;
+  });
+
+  app.post("/problems/generate/stream", async (request, reply) => {
+    const parsed = generateBody.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ message: parsed.error.message });
+    }
+
+    reply.hijack();
+    const res = reply.raw;
+
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+      "Access-Control-Allow-Origin": "*"
+    });
+
+    const send = (data: Record<string, unknown>) => {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    try {
+      const generator = problemGenerationService.generateFromInput(
+        parsed.data.input,
+        parsed.data.isCustomProblem
+      );
+
+      let result: Awaited<ReturnType<typeof generator.next>>;
+      while (!(result = await generator.next()).done) {
+        send({ type: "progress", data: result.value });
+      }
+
+      const generated = result.value;
+
+      const saved = await problemService.createProblem(
+        parsed.data.input,
+        "ai_generated",
+        generated
+      );
+
+      send({ type: "complete", data: saved });
+    } catch (err) {
+      send({
+        type: "error",
+        data: { message: (err as Error).message }
+      });
+    }
+
+    res.write("data: [DONE]\n\n");
+    res.end();
   });
 
   app.post("/problems", async (request, reply) => {
