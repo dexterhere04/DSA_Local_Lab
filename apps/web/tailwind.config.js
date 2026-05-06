@@ -4,10 +4,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        base: "#0f172a",
-        panel: "#111827",
-        accent: "#22c55e",
-        muted: "#94a3b8"
+        bg: "#080808",
+        surface: "#141414",
+        accent: "#c8a84e",
+        muted: "#7a7568"
+      },
+      fontFamily: {
+        serif: ["Instrument Serif", "Georgia", "serif"],
+        sans: ["Instrument Sans", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"]
       }
     }
   },
