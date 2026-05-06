@@ -19,6 +19,85 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+interface ProgressEvent {
+  type: "progress" | "complete" | "error";
+  data: {
+    step?: string;
+    issues?: string[];
+    callCount?: number;
+    partialProblem?: Record<string, unknown>;
+    message?: string;
+  };
+}
+
+async function streamGenerate(
+  payload: { input: string; isCustomProblem: boolean },
+  onProgress: (event: ProgressEvent) => void
+): Promise<void> {
+  const response = await fetch(`${API_BASE}/problems/generate/stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Request failed with ${response.status}`);
+  }
+
+  if (!response.body) {
+    throw new Error("No response body");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith("data: ")) continue;
+
+        const dataStr = trimmed.slice(6);
+        if (dataStr === "[DONE]") return;
+
+        try {
+          const event = JSON.parse(dataStr) as ProgressEvent;
+          onProgress(event);
+        } catch {
+          // skip malformed lines
+        }
+      }
+    }
+
+    // Process remaining buffer
+    const trimmed = buffer.trim();
+    if (trimmed.startsWith("data: ")) {
+      const dataStr = trimmed.slice(6);
+      if (dataStr !== "[DONE]") {
+        try {
+          const event = JSON.parse(dataStr) as ProgressEvent;
+          onProgress(event);
+        } catch {
+          // skip
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export const api = {
   listProblems: () => request<ProblemListItem[]>("/problems"),
   getProblem: (id: number) => request<ProblemDetail>(`/problems/${id}`),
@@ -27,6 +106,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload)
     }),
+  generateProblemStream: streamGenerate,
   runSubmission: (payload: { problemId: number; code: string; mode: "run" | "submit" }) =>
     request<SubmissionResponse>("/submissions", {
       method: "POST",
