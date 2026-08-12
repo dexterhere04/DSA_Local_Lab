@@ -4,13 +4,52 @@
   "version": "0.1.0",
   "description": "Lightweight self-hosted AI-powered DSA practice platform",
   "packageManager": "pnpm@9.12.3",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "db:generate": "pnpm --filter @dsa-lab/backend db:generate",
-    "db:migrate": "pnpm --filter @dsa-lab/backend db:migrate"
+    "db:migrate": "pnpm --filter @dsa-lab/backend db:migrate",
+    "desktop:dev": "concurrently -k \"pnpm --dir apps/backend dev\" \"pnpm --dir apps/web dev --host 0.0.0.0\" \"wait-on tcp:4000 tcp:5173 && ELECTRON_MODE=dev electron .\"",
+    "desktop:prod": "pnpm build && electron .",
+    "desktop:build": "pnpm build && electron-builder"
+  },
+  "build": {
+    "appId": "com.dsa-lab.desktop",
+    "productName": "DSA Lab",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "apps/backend/dist/**/*",
+      "apps/web/dist/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "apps/backend/data",
+        "to": "data"
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
   },
   "devDependencies": {
     "concurrently": "^10.0.4",
