@@ -15,7 +15,7 @@
   "dependencies": {
     "@dsa-lab/shared": "workspace:*",
     "@fastify/cors": "^10.0.1",
-    "better-sqlite3": "^11.5.0",
+    "better-sqlite3": "^13.0.3",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.36.1",
     "fastify": "^5.1.0",
@@ -23,7 +23,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.12",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.9.0",
     "drizzle-kit": "^0.27.1",
     "tsx": "^4.19.2",

@@ -305,6 +305,38 @@ a {
   padding: 20px 24px 40px;
 }
 
+.problem-select {
+  appearance: none;
+  width: 100%;
+  padding: 8px 36px 8px 12px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a7568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.problem-select:hover {
+  border-color: var(--border-active);
+}
+
+.problem-select:focus {
+  border-color: var(--accent-border);
+}
+
+.problem-select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
 /* Editor pane */
 .editor-header {
   display: flex;
@@ -678,7 +710,7 @@ tbody tr:hover td {
   font-family: var(--mono);
   font-size: 12px;
   line-height: 1.75;
-  color: var(--text-secondary);
+  color: var(--text);
 }
 
 /* Section labels */
