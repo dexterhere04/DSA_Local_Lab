@@ -161,7 +161,7 @@ export function GenerateProblemPage() {
             <button
               onClick={onGenerate}
               disabled={!input.trim() || input.trim().length < 2}
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary btn-lg centered-btn"
             >
               Generate
             </button>
