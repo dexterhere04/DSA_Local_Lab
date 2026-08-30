@@ -21,6 +21,9 @@ export const problems = sqliteTable("problems", {
     enum: ["easy", "medium", "hard"]
   }).notNull(),
   tags: text("tags", { mode: "json" }).notNull(),
+  referenceSolution: text("reference_solution").notNull().default(""),
+  timeLimitMs: integer("time_limit_ms").notNull().default(2000),
+  memoryLimitMb: integer("memory_limit_mb").notNull().default(256),
   createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP")
 });
 

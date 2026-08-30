@@ -1,5 +1,7 @@
 export type Difficulty = "easy" | "medium" | "hard";
 
+export type Verdict = "AC" | "WA" | "TLE" | "MLE" | "RE" | "CE";
+
 export interface ProblemListItem {
   id: number;
   title: string;
@@ -21,6 +23,8 @@ export interface ProblemDetail extends ProblemListItem {
   starterCode: string;
   expectedComplexity: string;
   publicTests: Array<{ id: number; input: string; expectedOutput: string; explanation?: string; isHidden: boolean }>;
+  timeLimitMs?: number;
+  memoryLimitMb?: number;
 }
 
 export interface SubmissionResponse {
@@ -31,14 +35,16 @@ export interface SubmissionResponse {
   runtimeMs?: number;
   memoryKb?: number;
   results: Array<{
-    input: string;
-    expectedOutput: string;
-    actualOutput: string;
+    input?: string;
+    expectedOutput?: string;
+    actualOutput?: string;
     passed: boolean;
     runtimeMs?: number;
     memoryKb?: number;
     error?: string;
     hidden: boolean;
+    verdict?: Verdict;
+    reason?: string;
   }>;
 }
 
@@ -48,6 +54,7 @@ export type GenerationStepName =
   | "llm_validating"
   | "patching"
   | "final_validating"
+  | "verifying"
   | "storing";
 
 export interface GenerationProgressEvent {

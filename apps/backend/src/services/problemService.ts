@@ -25,7 +25,10 @@ export class ProblemService {
         starterCode: payload.starterCode,
         expectedComplexity: payload.expectedComplexity,
         difficulty: payload.difficulty,
-        tags: payload.tags
+        tags: payload.tags,
+        referenceSolution: payload.referenceSolution ?? "",
+        timeLimitMs: payload.timeLimitMs ?? 2000,
+        memoryLimitMb: payload.memoryLimitMb ?? 256
       })
       .returning();
 
@@ -56,8 +59,10 @@ export class ProblemService {
       .from(testCases)
       .where(eq(testCases.problemId, id));
 
+    const { referenceSolution: _referenceSolution, ...safeProblem } = problem;
+
     return {
-      ...problem,
+      ...safeProblem,
       publicTests: problemTests.filter((tc) => !tc.isHidden),
       hiddenTests: problemTests.filter((tc) => tc.isHidden)
     };
