@@ -3,7 +3,7 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
-import { env } from "../config/env.js";
+import { configService } from "../config/configService.js";
 import type { Verdict } from "../types.js";
 import { buildJudgeRunnerSource } from "./javaTemplate.js";
 
@@ -60,14 +60,15 @@ export class LocalJavaExecutionService {
   ): Promise<CaseExecution> {
     const workDir = await fs.mkdtemp(path.join(os.tmpdir(), "dsa-lab-java-"));
     const sourceCode = buildJudgeRunnerSource(userCode, input);
-    const timeLimitMs = opts.timeLimitMs ?? env.EXECUTION_TIMEOUT_MS;
+    const config = configService.get();
+    const timeLimitMs = opts.timeLimitMs ?? config.executionTimeoutMs;
     const memoryLimitMb = opts.memoryLimitMb;
 
     try {
       await fs.writeFile(path.join(workDir, "Solution.java"), sourceCode, "utf-8");
 
       try {
-        await execFileAsync(env.JAVAC_BIN, ["Solution.java"], {
+        await execFileAsync(config.javacBin, ["Solution.java"], {
           cwd: workDir,
           timeout: timeLimitMs,
           maxBuffer: 1024 * 1024
@@ -87,7 +88,7 @@ export class LocalJavaExecutionService {
       const javaArgs = memoryLimitMb ? [`-Xmx${memoryLimitMb}m`, "Runner"] : ["Runner"];
       const start = Date.now();
       try {
-        const { stdout, stderr } = await execFileAsync(env.JAVA_BIN, javaArgs, {
+        const { stdout, stderr } = await execFileAsync(config.javaBin, javaArgs, {
           cwd: workDir,
           timeout: timeLimitMs,
           maxBuffer: 1024 * 1024

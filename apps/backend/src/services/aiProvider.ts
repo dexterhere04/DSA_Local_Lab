@@ -1,4 +1,4 @@
-import { env } from "../config/env.js";
+import { configService } from "../config/configService.js";
 import type { ValidationResult } from "../types.js";
 
 interface ChatMessage {
@@ -8,18 +8,19 @@ interface ChatMessage {
 
 export class AiProvider {
   private async call(messages: ChatMessage[], temperature = 0.4): Promise<string> {
-    if (!env.OPENAI_API_KEY) {
+    const config = configService.get();
+    if (!config.openaiApiKey) {
       throw new Error("OPENAI_API_KEY is missing. Add it in .env to enable AI generation.");
     }
 
-    const response = await fetch(`${env.OPENAI_BASE_URL}/chat/completions`, {
+    const response = await fetch(`${config.openaiBaseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${env.OPENAI_API_KEY}`
+        Authorization: `Bearer ${config.openaiApiKey}`
       },
       body: JSON.stringify({
-        model: env.OPENAI_MODEL,
+        model: config.openaiModel,
         temperature,
         messages
       })

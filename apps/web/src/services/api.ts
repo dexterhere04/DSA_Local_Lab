@@ -1,6 +1,6 @@
 import type { ProblemDetail, ProblemListItem, SubmissionResponse } from "@dsa-lab/shared";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -98,6 +98,20 @@ async function streamGenerate(
   }
 }
 
+export interface SettingsState {
+  openaiBaseUrl: string;
+  openaiModel: string;
+  hasApiKey: boolean;
+  javaBin: string;
+  javacBin: string;
+  executionTimeoutMs: number;
+}
+
+export interface HealthState {
+  ok: boolean;
+  java: { available: boolean; version?: string };
+}
+
 export const api = {
   listProblems: () => request<ProblemListItem[]>("/problems"),
   getProblem: (id: number) => request<ProblemDetail>(`/problems/${id}`),
@@ -114,5 +128,12 @@ export const api = {
     }),
   listSubmissions: () => request<Array<Record<string, unknown>>>("/submissions"),
   listTopics: () => request<Array<{ topic: string; count: number }>>("/topics"),
-  listProblemSets: () => request<Array<Record<string, unknown>>>("/problem-sets")
+  listProblemSets: () => request<Array<Record<string, unknown>>>("/problem-sets"),
+  getSettings: () => request<SettingsState>("/settings"),
+  updateSettings: (payload: Partial<SettingsState> & { openaiApiKey?: string }) =>
+    request<SettingsState>("/settings", {
+      method: "PUT",
+      body: JSON.stringify(payload)
+    }),
+  getHealth: () => request<HealthState>("/health")
 };
