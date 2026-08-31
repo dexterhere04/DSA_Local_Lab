@@ -13,6 +13,14 @@ Lightweight self-hosted AI-powered DSA practice platform inspired by LeetCode an
 - Fastify + SQLite + Drizzle backend.
 - Dockerized local deployment.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Dashboard](screenshots/Screenshot%20From%202026-08-31%2012-53-33.png) | ![Topic Explorer](screenshots/Screenshot%20From%202026-08-31%2012-54-26.png) |
+| ![Problem Generator](screenshots/Screenshot%20From%202026-08-31%2013-02-31.png) | ![Problem Solver](screenshots/Screenshot%20From%202026-08-31%2013-04-46.png) |
+| ![Submission History](screenshots/Screenshot%20From%202026-08-31%2013-06-26.png) | ![Settings](screenshots/Screenshot%20From%202026-08-31%2013-06-42.png) |
+
 ## Architecture
 - Frontend: `apps/web` (React, Monaco, Tailwind).
 - Backend: `apps/backend` (Fastify API, AI orchestration, local Java execution integration).
