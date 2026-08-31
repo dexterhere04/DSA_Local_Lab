@@ -13,6 +13,14 @@ Lightweight self-hosted AI-powered DSA practice platform inspired by LeetCode an
 - Fastify + SQLite + Drizzle backend.
 - Dockerized local deployment.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Dashboard](screenshots/Screenshot%20From%202026-08-31%2012-53-33.png) | ![Topic Explorer](screenshots/Screenshot%20From%202026-08-31%2012-54-26.png) |
+| ![Problem Generator](screenshots/Screenshot%20From%202026-08-31%2013-02-31.png) | ![Problem Solver](screenshots/Screenshot%20From%202026-08-31%2013-04-46.png) |
+| ![Submission History](screenshots/Screenshot%20From%202026-08-31%2013-06-26.png) | ![Settings](screenshots/Screenshot%20From%202026-08-31%2013-06-42.png) |
+
 ## Architecture
 - Frontend: `apps/web` (React, Monaco, Tailwind).
 - Backend: `apps/backend` (Fastify API, AI orchestration, local Java execution integration).
@@ -59,7 +67,7 @@ See detailed route docs in `docs/API_ROUTES.md`.
 ### 1) Prerequisites
 - Node.js 20+
 - pnpm 9+
-- Java JDK 17+ installed locally (`javac` and `java` available in PATH)
+- Java JDK 8+ installed locally (`javac` and `java` available in PATH)
 - OpenAI-compatible API key
 
 ### 2) Configure Environment
@@ -107,6 +115,18 @@ docker compose up --build
 Services:
 - Web: `http://localhost:5173`
 - API: `http://localhost:4000`
+
+## Desktop App (Electron)
+
+```bash
+pnpm desktop:dev     # build + launch the desktop app (unpackaged)
+pnpm desktop:build   # build + package a Linux AppImage (dist-electron/)
+```
+
+- The Electron shell spawns the bundled backend (`dist/index.cjs`) via `utilityProcess.fork` and loads it at `http://127.0.0.1:<free-port>`.
+- The backend serves the built frontend same-origin; the DB lives in the app's `userData` dir.
+- Configure the OpenAI key/base/model, Java paths, and timeout in the in-app **Settings** page (persisted to `userData/.env`).
+- Java (JDK 8+) is an external prerequisite; the app shows a banner when it's missing.
 
 ## Local Java Execution Example
 The backend writes wrapped code to a temporary directory, then runs:

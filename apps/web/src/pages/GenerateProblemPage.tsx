@@ -9,6 +9,7 @@ const STEP_LABELS: Record<string, { title: string; desc: string }> = {
   llm_validating: { title: "Content validation", desc: "Reviewing problem quality" },
   patching: { title: "Patching issues", desc: "Fixing validation errors" },
   final_validating: { title: "Final validation", desc: "Verifying patched output" },
+  verifying: { title: "Verifying solution", desc: "Running reference solution against all tests" },
   storing: { title: "Saving problem", desc: "Storing to your local problem library" }
 };
 
@@ -33,7 +34,7 @@ export function GenerateProblemPage() {
   const [partialProblem, setPartialProblem] = useState<Record<string, unknown> | null>(null);
   const navigate = useNavigate();
 
-  const stepOrder: string[] = ["generating", "schema_validating", "llm_validating", "storing"];
+  const stepOrder: string[] = ["generating", "schema_validating", "llm_validating", "verifying", "storing"];
 
   useEffect(() => {
     api.listProblems().then((list) => {
@@ -161,7 +162,7 @@ export function GenerateProblemPage() {
             <button
               onClick={onGenerate}
               disabled={!input.trim() || input.trim().length < 2}
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary btn-lg centered-btn"
             >
               Generate
             </button>

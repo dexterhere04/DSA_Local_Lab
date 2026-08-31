@@ -2,12 +2,22 @@ import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { localJavaExecutionService } from "../services/localJavaExecutionService.js";
 import { problemService } from "../services/problemService.js";
+import type { Verdict } from "../types.js";
 
 const submissionBody = z.object({
   problemId: z.number().int().positive(),
   code: z.string().min(1),
   mode: z.enum(["run", "submit"])
 });
+
+const VERDICT_REASON: Record<Verdict, string> = {
+  AC: "Accepted",
+  WA: "Wrong Answer",
+  TLE: "Time Limit Exceeded",
+  MLE: "Memory Limit Exceeded",
+  RE: "Runtime Error",
+  CE: "Compilation Error"
+};
 
 export async function submissionRoutes(app: FastifyInstance) {
   app.get("/submissions", async () => problemService.getSubmissionHistory());
@@ -31,9 +41,25 @@ export async function submissionRoutes(app: FastifyInstance) {
         parsed.data.code,
         test.input,
         test.expectedOutput,
-        test.isHidden
+        test.isHidden,
+        {
+          timeLimitMs: problem.timeLimitMs,
+          memoryLimitMb: problem.memoryLimitMb
+        }
       );
-      results.push(result);
+
+      if (test.isHidden) {
+        results.push({
+          passed: result.passed,
+          hidden: true,
+          verdict: result.verdict,
+          runtimeMs: result.runtimeMs,
+          memoryKb: result.memoryKb,
+          reason: result.passed ? undefined : VERDICT_REASON[result.verdict]
+        });
+      } else {
+        results.push(result);
+      }
 
       if (!result.passed && parsed.data.mode === "submit") {
         break;
@@ -68,7 +94,7 @@ export async function submissionRoutes(app: FastifyInstance) {
       totalCount,
       runtimeMs,
       memoryKb,
-      results: parsed.data.mode === "submit" ? results.filter((r) => !r.hidden) : results
+      results
     };
   });
 }

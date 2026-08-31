@@ -42,6 +42,9 @@ const saveCustomBody = z.object({
   starterCode: z.string(),
   expectedComplexity: z.string(),
   solutionOutline: z.string().default(""),
+  referenceSolution: z.string().default(""),
+  timeLimitMs: z.coerce.number().int().positive().default(2000),
+  memoryLimitMb: z.coerce.number().int().positive().default(256),
   difficulty: z.enum(["easy", "medium", "hard"]),
   tags: z.array(z.string()).default([]),
   sourceInput: z.string().default("manual")
@@ -165,7 +168,16 @@ export async function problemRoutes(app: FastifyInstance) {
       return reply.status(400).send({ message: parsed.error.message });
     }
 
-    const saved = await problemService.createProblem(parsed.data.sourceInput, "custom", parsed.data);
+    const data = parsed.data;
+
+    if (data.referenceSolution.trim()) {
+      const failures = await problemGenerationService.verifyProblem(data);
+      if (failures.length > 0) {
+        return reply.status(400).send({ message: `Verification failed: ${failures[0]}` });
+      }
+    }
+
+    const saved = await problemService.createProblem(data.sourceInput, "custom", data);
     return saved;
   });
 

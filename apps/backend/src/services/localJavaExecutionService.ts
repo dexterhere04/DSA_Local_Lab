@@ -3,7 +3,8 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
-import { env } from "../config/env.js";
+import { configService } from "../config/configService.js";
+import type { Verdict } from "../types.js";
 import { buildJudgeRunnerSource } from "./javaTemplate.js";
 
 const execFileAsync = promisify(execFile);
@@ -17,6 +18,12 @@ export interface CaseExecution {
   runtimeMs?: number;
   memoryKb?: number;
   error?: string;
+  verdict: Verdict;
+}
+
+export interface RunCaseOptions {
+  timeLimitMs?: number;
+  memoryLimitMb?: number;
 }
 
 const formatExecError = (error: unknown) => {
@@ -27,18 +34,43 @@ const formatExecError = (error: unknown) => {
   return String(error);
 };
 
+const stderrText = (error: unknown): string => {
+  if (error && typeof error === "object") {
+    const err = error as { stderr?: string; stdout?: string; message?: string };
+    return `${err.stderr ?? ""}\n${err.stdout ?? ""}\n${err.message ?? ""}`;
+  }
+  return String(error);
+};
+
+const wasKilled = (error: unknown): boolean => {
+  if (error && typeof error === "object") {
+    const err = error as { killed?: boolean; signal?: string };
+    return err.killed === true || err.signal === "SIGTERM" || err.signal === "SIGKILL";
+  }
+  return false;
+};
+
 export class LocalJavaExecutionService {
-  async runCase(userCode: string, input: string, expectedOutput: string, hidden: boolean): Promise<CaseExecution> {
+  async runCase(
+    userCode: string,
+    input: string,
+    expectedOutput: string,
+    hidden: boolean,
+    opts: RunCaseOptions = {}
+  ): Promise<CaseExecution> {
     const workDir = await fs.mkdtemp(path.join(os.tmpdir(), "dsa-lab-java-"));
     const sourceCode = buildJudgeRunnerSource(userCode, input);
+    const config = configService.get();
+    const timeLimitMs = opts.timeLimitMs ?? config.executionTimeoutMs;
+    const memoryLimitMb = opts.memoryLimitMb;
 
     try {
       await fs.writeFile(path.join(workDir, "Solution.java"), sourceCode, "utf-8");
 
       try {
-        await execFileAsync(env.JAVAC_BIN, ["Solution.java"], {
+        await execFileAsync(config.javacBin, ["Solution.java"], {
           cwd: workDir,
-          timeout: env.EXECUTION_TIMEOUT_MS,
+          timeout: timeLimitMs,
           maxBuffer: 1024 * 1024
         });
       } catch (error) {
@@ -48,21 +80,37 @@ export class LocalJavaExecutionService {
           actualOutput: "",
           passed: false,
           hidden,
-          error: formatExecError(error)
+          error: formatExecError(error),
+          verdict: "CE"
         };
       }
 
+      const javaArgs = memoryLimitMb ? [`-Xmx${memoryLimitMb}m`, "Runner"] : ["Runner"];
       const start = Date.now();
       try {
-        const { stdout, stderr } = await execFileAsync(env.JAVA_BIN, ["Runner"], {
+        const { stdout, stderr } = await execFileAsync(config.javaBin, javaArgs, {
           cwd: workDir,
-          timeout: env.EXECUTION_TIMEOUT_MS,
+          timeout: timeLimitMs,
           maxBuffer: 1024 * 1024
         });
 
         const runtimeMs = Date.now() - start;
         const actualOutput = stdout.trim();
-        const passed = actualOutput === expectedOutput.trim();
+        const combinedErr = stderr?.trim();
+        const passed = actualOutput === expectedOutput.trim() && !combinedErr;
+
+        let verdict: Verdict;
+        if (!passed && combinedErr) {
+          if (/OutOfMemoryError/i.test(combinedErr)) {
+            verdict = "MLE";
+          } else {
+            verdict = "RE";
+          }
+        } else if (!passed) {
+          verdict = "WA";
+        } else {
+          verdict = "AC";
+        }
 
         return {
           input,
@@ -71,9 +119,20 @@ export class LocalJavaExecutionService {
           passed,
           hidden,
           runtimeMs,
-          error: stderr?.trim() || undefined
+          error: combinedErr || undefined,
+          verdict
         };
       } catch (error) {
+        const combinedErr = stderrText(error);
+        let verdict: Verdict;
+        if (wasKilled(error)) {
+          verdict = "TLE";
+        } else if (/OutOfMemoryError/i.test(combinedErr)) {
+          verdict = "MLE";
+        } else {
+          verdict = "RE";
+        }
+
         return {
           input,
           expectedOutput,
@@ -81,7 +140,8 @@ export class LocalJavaExecutionService {
           passed: false,
           hidden,
           runtimeMs: Date.now() - start,
-          error: formatExecError(error)
+          error: formatExecError(error),
+          verdict
         };
       }
     } finally {

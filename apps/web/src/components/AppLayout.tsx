@@ -5,7 +5,8 @@ const navItems = [
   { to: "/generate", label: "Generate" },
   { to: "/solve", label: "Solve" },
   { to: "/history", label: "History" },
-  { to: "/topics", label: "Topics" }
+  { to: "/topics", label: "Topics" },
+  { to: "/settings", label: "Settings" }
 ];
 
 export function AppLayout() {

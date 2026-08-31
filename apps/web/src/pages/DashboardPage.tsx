@@ -7,6 +7,7 @@ export function DashboardPage() {
   const [problems, setProblems] = useState<ProblemListItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [javaMissing, setJavaMissing] = useState(false);
 
   useEffect(() => {
     api
@@ -17,6 +18,11 @@ export function DashboardPage() {
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
+
+    api
+      .getHealth()
+      .then((h) => setJavaMissing(!h.java.available))
+      .catch(() => setJavaMissing(false));
   }, []);
 
   return (
@@ -27,6 +33,15 @@ export function DashboardPage() {
           Generate AI-powered DSA problems, solve them in Java, and track your progress.
         </p>
       </div>
+
+      {javaMissing && (
+        <div className="mb-6 rounded-md border border-[var(--error-border)] bg-[var(--error-dim)] p-3 text-sm text-[var(--error)] flex items-center gap-3">
+          <span>Java runtime not detected. Code execution will fail.</span>
+          <Link to="/settings" className="btn btn-secondary btn-sm ml-auto">
+            Configure
+          </Link>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-3 mb-8">
         <div className="card animate-in" style={{ animationDelay: "0ms" }}>

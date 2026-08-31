@@ -1,5 +1,7 @@
 export type Difficulty = "easy" | "medium" | "hard";
 
+export type Verdict = "AC" | "WA" | "TLE" | "MLE" | "RE" | "CE";
+
 export interface ProblemExample {
   input: string;
   output: string;
@@ -29,6 +31,9 @@ export interface GeneratedProblem {
   difficulty: Difficulty;
   tags: string[];
   solutionOutline: string;
+  referenceSolution: string;
+  timeLimitMs: number;
+  memoryLimitMb: number;
 }
 
 export interface ValidationIssue {
@@ -51,4 +56,5 @@ export interface JudgeCaseResult {
   memoryKb?: number;
   error?: string;
   hidden: boolean;
+  verdict?: Verdict;
 }
